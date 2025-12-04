@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBC Interpretation Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f8ff;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #1a6bb3;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section, .output-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            color: #1a6bb3;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6f2ff;
+            font-size: 1.5rem;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #1a6bb3;
+        }
+        
+        .unit {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        #calculate-btn {
+            background-color: #1a6bb3;
+            color: white;
+            flex: 1;
+        }
+        
+        #calculate-btn:hover {
+            background-color: #145a9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(26, 107, 179, 0.3);
+        }
+        
+        #reset-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            flex: 1;
+        }
+        
+        #reset-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .results-table th, .results-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .results-table th {
+            background-color: #f5f9ff;
+            color: #1a6bb3;
+            font-weight: 600;
+        }
+        
+        .value-cell {
+            font-weight: 600;
+        }
+        
+        .normal {
+            color: #2e7d32;
+        }
+        
+        .low {
+            color: #d32f2f;
+        }
+        
+        .high {
+            color: #ed6c02;
+        }
+        
+        .interpretation-box {
+            background-color: #f9f9f9;
+            border-left: 4px solid #1a6bb3;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .interpretation-box h3 {
+            color: #1a6bb3;
+            margin-bottom: 10px;
+        }
+        
+        .interpretation-text {
+            line-height: 1.8;
+        }
+        
+        .disclaimer {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .disclaimer h3 {
+            color: #ff8f00;
+            margin-bottom: 10px;
+        }
+        
+        .disclaimer-text {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #1a6bb3;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #d32f2f;
+            font-weight: 600;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Complete Blood Count (CBC) Interpretation Tool</h1>
+        <p class="subtitle">Enter your CBC values to get a basic interpretation. Always consult a healthcare professional for proper diagnosis.</p>
+    </header>
+    
+    <div class="container">
+        <section class="input-section">
+            <h2 class="section-title">Enter Your CBC Values</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="hemoglobin">Hemoglobin (Hb)</label>
+                    <input type="number" step="0.1" id="hemoglobin" placeholder="e.g., 13.5">
+                    <div class="unit">g/dL (Normal: 13.5-17.5 for men, 12.0-15.5 for women)</div>
+                    <div class="error" id="hemoglobin-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="wbc">Total WBC Count</label>
+                    <input type="number" step="0.1" id="wbc" placeholder="e.g., 7.5">
+                    <div class="unit">×10³/μL (Normal: 4.0-11.0)</div>
+                    <div class="error" id="wbc-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="neutrophils">Neutrophils (%)</label>
+                    <input type="number" step="0.1" id="neutrophils" placeholder="e.g., 60">
+                    <div class="unit">% (Normal: 40-75)</div>
+                    <div class="error" id="neutrophils-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="lymphocytes">Lymphocytes (%)</label>
+                    <input type="number" step="0.1" id="lymphocytes" placeholder="e.g., 30">
+                    <div class="unit">% (Normal: 20-50)</div>
+                    <div class="error" id="lymphocytes-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="monocytes">Monocytes (%)</label>
+                    <input type="number" step="0.1" id="monocytes" placeholder="e.g., 5">
+                    <div class="unit">% (Normal: 2-10)</div>
+                    <div class="error" id="monocytes-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="eosinophils">Eosinophils (%)</label>
+                    <input type="number" step="0.1" id="eosinophils" placeholder="e.g., 2">
+                    <div class="unit">% (Normal: 0-6)</div>
+                    <div class="error" id="eosinophils-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="basophils">Basophils (%)</label>
+                    <input type="number" step="0.1" id="basophils" placeholder="e.g., 1">
+                    <div class="unit">% (Normal: 0-2)</div>
+                    <div class="error" id="basophils-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="platelets">Platelet Count</label>
+                    <input type="number" id="platelets" placeholder="e.g., 250">
+                    <div class="unit">×10³/μL (Normal: 150-450)</div>
+                    <div class="error" id="platelets-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="rbc">RBC Count</label>
+                    <input type="number" step="0.1" id="rbc" placeholder="e.g., 4.7">
+                    <div class="unit">×10⁶/μL (Normal: 4.5-5.9 for men, 4.0-5.2 for women)</div>
+                    <div class="error" id="rbc-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="hct">PCV / Hematocrit (HCT)</label>
+                    <input type="number" id="hct" placeholder="e.g., 45">
+                    <div class="unit">% (Normal: 41-53 for men, 36-46 for women)</div>
+                    <div class="error" id="hct-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="mcv">Mean Corpuscular Volume (MCV)</label>
+                    <input type="number" id="mcv" placeholder="e.g., 90">
+                    <div class="unit">fL (Normal: 80-100)</div>
+                    <div class="error" id="mcv-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="mch">Mean Corpuscular Hemoglobin (MCH)</label>
+                    <input type="number" id="mch" placeholder="e.g., 30">
+                    <div class="unit">pg (Normal: 27-33)</div>
+                    <div class="error" id="mch-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="mchc">Mean Corpuscular Hemoglobin Concentration (MCHC)</label>
+                    <input type="number" id="mchc" placeholder="e.g., 33">
+                    <div class="unit">g/dL (Normal: 32-36)</div>
+                    <div class="error" id="mchc-error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="rdw">Red Cell Distribution Width (RDW)</label>
+                    <input type="number" step="0.1" id="rdw" placeholder="e.g., 13.5">
+                    <div class="unit">% (Normal: 11.5-14.5)</div>
+                    <div class="error" id="rdw-error"></div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="calculate-btn">Interpret CBC Results</button>
+                <button id="reset-btn">Reset All Values</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your CBC values...</p>
+            </div>
+        </section>
+        
+        <section class="output-section">
+            <h2 class="section-title">CBC Interpretation Results</h2>
+            
+            <div id="results-container">
+                <p class="subtitle">Enter your CBC values and click "Interpret CBC Results" to see your analysis here.</p>
+                
+                <table class="results-table" id="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Your Value</th>
+                            <th>Status</th>
+                            <th>Normal Range</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+                
+                <div class="interpretation-box" id="interpretation-box" style="display: none;">
+                    <h3>Interpretation Summary</h3>
+                    <div class="interpretation-text" id="interpretation-text">
+                        <!-- Interpretation will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="disclaimer">
+                    <h3>Important Disclaimer</h3>
+                    <div class="disclaimer-text">
+                        <p>This CBC interpretation tool is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
+                        <p>This tool uses standard reference ranges which may vary between laboratories. Always refer to the reference ranges provided by your testing laboratory.</p>
+                        <p>Never disregard professional medical advice or delay seeking it because of something you have read or interpreted using this tool.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p>© 2023 CBC Interpretation Tool. For educational purposes only.</p>
+        <p>This tool follows standard adult reference ranges. Pediatric and pregnancy ranges may differ.</p>
+    </footer>
+
+    <script>
+        // DOM elements
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const loadingDiv = document.getElementById('loading');
+        const resultsTable = document.getElementById('results-table');
+        const resultsBody = document.getElementById('results-body');
+        const interpretationBox = document.getElementById('interpretation-box');
+        const interpretationText = document.getElementById('interpretation-text');
+        
+        // Normal ranges (adult)
+        const normalRanges = {
+            hemoglobin: { min: 13.5, max: 17.5, unit: "g/dL", genderDiff: true, femaleMin: 12.0, femaleMax: 15.5 },
+            wbc: { min: 4.0, max: 11.0, unit: "×10³/μL" },
+            neutrophils: { min: 40, max: 75, unit: "%" },
+            lymphocytes: { min: 20, max: 50, unit: "%" },
+            monocytes: { min: 2, max: 10, unit: "%" },
+            eosinophils: { min: 0, max: 6, unit: "%" },
+            basophils: { min: 0, max: 2, unit: "%" },
+            platelets: { min: 150, max: 450, unit: "×10³/μL" },
+            rbc: { min: 4.5, max: 5.9, unit: "×10⁶/μL", genderDiff: true, femaleMin: 4.0, femaleMax: 5.2 },
+            hct: { min: 41, max: 53, unit: "%", genderDiff: true, femaleMin: 36, femaleMax: 46 },
+            mcv: { min: 80, max: 100, unit: "fL" },
+            mch: { min: 27, max: 33, unit: "pg" },
+            mchc: { min: 32, max: 36, unit: "g/dL" },
+            rdw: { min: 11.5, max: 14.5, unit: "%" }
+        };
+        
+        // Input field IDs
+        const inputFields = [
+            'hemoglobin', 'wbc', 'neutrophils', 'lymphocytes', 'monocytes', 
+            'eosinophils', 'basophils', 'platelets', 'rbc', 'hct', 'mcv', 
+            'mch', 'mchc', 'rdw'
+        ];
+        
+        // Event listeners
+        calculateBtn.addEventListener('click', interpretCBC);
+        resetBtn.addEventListener('click', resetAllValues);
+        
+        // Load sample data for testing (optional)
+        window.addEventListener('load', () => {
+            // Uncomment the line below to load sample data for testing
+            // loadSampleData();
+        });
+        
+        // Main function to interpret CBC
+        function interpretCBC() {
+            // Reset previous errors
+            clearErrors();
+            
+            // Validate inputs
+            if (!validateInputs()) {
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultsTable.style.display = 'none';
+            interpretationBox.style.display = 'none';
+            
+            // Simulate processing time
+            setTimeout(() => {
+                // Get all values
+                const values = {};
+                inputFields.forEach(field => {
+                    values[field] = parseFloat(document.getElementById(field).value);
+                });
+                
+                // Calculate differential sum
+                const diffSum = values.neutrophils + values.lymphocytes + values.monocytes + values.eosinophils + values.basophils;
+                
+                // Check if differential sum is approximately 100%
+                if (diffSum < 95 || diffSum > 105) {
+                    showError('neutrophils', `Differential sum is ${diffSum}%. Please ensure percentages add up to ~100%.`);
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+                
+                 // Generate results
+                generateResultsTable(values);
+                
+                // Generate interpretation
+                generateInterpretation(values);
+                
+                // Hide loading and show results
+                loadingDiv.style.display = 'none';
+                resultsTable.style.display = 'table';
+                interpretationBox.style.display = 'block';
+                
+                // Scroll to results
+                document.querySelector('.output-section').scrollIntoView({ behavior: 'smooth' });
+            }, 800);
+        }
+        
+        // Generate results table
+        function generateResultsTable(values) {
+            resultsBody.innerHTML = '';
+            
+            inputFields.forEach(field => {
+                const value = values[field];
+                const range = normalRanges[field];
+                
+                // Determine status
+                let status = 'Normal';
+                let statusClass = 'normal';
+                
+                // Check if value is low or high
+                if (range.genderDiff) {
+                    // For simplicity, using male ranges as default
+                    const min = range.min;
+                    const max = range.max;
+                    
+                    if (value < min) {
+                        status = 'Low';
+                        statusClass = 'low';
+                    } else if (value > max) {
+                        status = 'High';
+                        statusClass = 'high';
+                    }
+                } else {
+                    if (value < range.min) {
+                        status = 'Low';
+                        statusClass = 'low';
+                    } else if (value > range.max) {
+                        status = 'High';
+                        statusClass = 'high';
+                    }
+                }
+                
+                // Format range text
+                let rangeText = `${range.min}-${range.max} ${range.unit}`;
+                if (range.genderDiff) {
+                    rangeText = `M: ${range.min}-${range.max}, F: ${range.femaleMin}-${range.femaleMax} ${range.unit}`;
+                }
+                
+                // Create row
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${getParameterName(field)}</td>
+                    <td class="value-cell">${value} ${range.unit}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td>${rangeText}</td>
+                `;
+                
+                resultsBody.appendChild(row);
+            });
+        }
+        
+        // Generate interpretation text
+        function generateInterpretation(values) {
+            let interpretation = '';
+            
+            // Check RBC indices for anemia type
+            let anemiaType = '';
+            let rbcNote = '';
+            
+            if (values.hemoglobin < 13.5 || (values.hemoglobin < 12.0 && values.rbc < 4.0)) {
+                // Check for anemia
+                if (values.mcv < 80) {
+                    anemiaType = 'microcytic anemia';
+                    rbcNote = 'This may suggest iron deficiency anemia, thalassemia, or anemia of chronic disease.';
+                } else if (values.mcv > 100) {
+                    anemiaType = 'macrocytic anemia';
+                    rbcNote = 'This may suggest vitamin B12 or folate deficiency, liver disease, or hypothyroidism.';
+                } else {
+                    anemiaType = 'normocytic anemia';
+                    rbcNote = 'This may suggest anemia of chronic disease, hemolytic anemia, or early iron deficiency.';
+                }
+                
+                interpretation += `<p><strong>Red Blood Cell Analysis:</strong> Your hemoglobin level is low, suggesting ${anemiaType}. ${rbcNote}</p>`;
+            } else if (values.hemoglobin > 17.5) {
+                interpretation += `<p><strong>Red Blood Cell Analysis:</strong> Your hemoglobin level is high. This may be due to dehydration, lung disease, or living at high altitude.</p>`;
+            } else {
+                interpretation += `<p><strong>Red Blood Cell Analysis:</strong> Your hemoglobin level is within the normal range.</p>`;
+            }
+            
+            // Check WBC count
+            if (values.wbc < 4.0) {
+                interpretation += `<p><strong>White Blood Cell Analysis:</strong> You have leukopenia (low white blood cell count). This can occur with viral infections, certain medications, or bone marrow disorders.</p>`;
+            } else if (values.wbc > 11.0) {
+                interpretation += `<p><strong>White Blood Cell Analysis:</strong> You have leukocytosis (high white blood cell count). This can occur with bacterial infections, inflammation, or stress.</p>`;
+            } else {
+                interpretation += `<p><strong>White Blood Cell Analysis:</strong> Your white blood cell count is within the normal range.</p>`;
+            }
+            
+            // Check differentials
+            let diffNotes = [];
+            
+            if (values.neutrophils < 40) diffNotes.push('low neutrophils (neutropenia)');
+            if (values.neutrophils > 75) diffNotes.push('high neutrophils (neutrophilia)');
+            if (values.lymphocytes < 20) diffNotes.push('low lymphocytes (lymphocytopenia)');
+            if (values.lymphocytes > 50) diffNotes.push('high lymphocytes (lymphocytosis)');
+            if (values.eosinophils > 6) diffNotes.push('high eosinophils (eosinophilia)');
+            if (values.monocytes > 10) diffNotes.push('high monocytes (monocytosis)');
+            if (values.basophils > 2) diffNotes.push('high basophils (basophilia)');
+            
+            if (diffNotes.length > 0) {
+                interpretation += `<p><strong>White Blood Cell Differential:</strong> Your results show ${diffNotes.join(', ')}. This pattern can provide clues about specific conditions like infections, allergies, or inflammatory disorders.</p>`;
+            } else {
+                interpretation += `<p><strong>White Blood Cell Differential:</strong> All white blood cell types are within normal percentages.</p>`;
+            }
+            
+            // Check platelets
+            if (values.platelets < 150) {
+                interpretation += `<p><strong>Platelet Analysis:</strong> You have thrombocytopenia (low platelet count). This can increase bleeding risk and may be due to various conditions affecting platelet production or destruction.</p>`;
+            } else if (values.platelets > 450) {
+                interpretation += `<p><strong>Platelet Analysis:</strong> You have thrombocytosis (high platelet count). This can occur with inflammation, iron deficiency, or certain bone marrow disorders.</p>`;
+            } else {
+                interpretation += `<p><strong>Platelet Analysis:</strong> Your platelet count is within the normal range.</p>`;
+            }
+            
+            // Additional notes based on RBC indices
+            if (values.mch < 27 || values.mchc < 32) {
+                interpretation += `<p><strong>Additional Finding:</strong> Low MCH or MCHC suggests hypochromic (pale) red blood cells, often seen in iron deficiency anemia.</p>`;
+            }
+            
+            if (values.rdw > 14.5) {
+                interpretation += `<p><strong>Additional Finding:</strong> High RDW indicates increased variation in red blood cell size. This can be seen in mixed nutrient deficiencies or early treatment response.</p>`;
+            }
+            
+            // Final advice
+            interpretation += `<p><strong>Important Note:</strong> This interpretation is based on standard reference ranges and common patterns. Many factors can affect CBC results including age, sex, pregnancy, altitude, and individual health conditions. Always discuss your results with a healthcare provider who can consider your complete medical history.</p>`;
+            
+            interpretationText.innerHTML = interpretation;
+        }
+        
+        // Get display name for parameter
+        function getParameterName(field) {
+            const names = {
+                hemoglobin: "Hemoglobin (Hb)",
+                wbc: "White Blood Cells (WBC)",
+                neutrophils: "Neutrophils",
+                lymphocytes: "Lymphocytes",
+                monocytes: "Monocytes",
+                eosinophils: "Eosinophils",
+                basophils: "Basophils",
+                platelets: "Platelets",
+                rbc: "Red Blood Cells (RBC)",
+                hct: "Hematocrit (HCT)",
+                mcv: "Mean Corpuscular Volume (MCV)",
+                mch: "Mean Corpuscular Hemoglobin (MCH)",
+                mchc: "Mean Corpuscular Hemoglobin Concentration (MCHC)",
+                rdw: "Red Cell Distribution Width (RDW)"
+            };
+            
+            return names[field] || field;
+        }
+        
+        // Validate all inputs
+        function validateInputs() {
+            let isValid = true;
+            
+            inputFields.forEach(field => {
+                const input = document.getElementById(field);
+                const value = parseFloat(input.value);
+                const errorElement = document.getElementById(`${field}-error`);
+                
+                // Check if value is entered
+                if (isNaN(value)) {
+                    errorElement.textContent = 'Please enter a valid number';
+                    isValid = false;
+                    return;
+                }
+                
+                // Check for reasonable ranges
+                const range = normalRanges[field];
+                let min = range.min;
+                let max = range.max;
+                
+                // For extremely low or high values, flag as potential error
+                if (field === 'hemoglobin' && (value < 5 || value > 25)) {
+                    errorElement.textContent = 'Value appears outside plausible range. Please verify.';
+                    isValid = false;
+                } else if (field === 'wbc' && (value < 1 || value > 100)) {
+                    errorElement.textContent = 'Value appears outside plausible range. Please verify.';
+                    isValid = false;
+                } else if (field.includes('phils') && (value < 0 || value > 100)) {
+                    errorElement.textContent = 'Percentage must be between 0 and 100';
+                    isValid = false;
+                } else if (field === 'platelets' && (value < 10 || value > 1000)) {
+                    errorElement.textContent = 'Value appears outside plausible range. Please verify.';
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Clear all error messages
+        function clearErrors() {
+            inputFields.forEach(field => {
+                document.getElementById(`${field}-error`).textContent = '';
+            });
+        }
+        
+        // Show error for specific field
+        function showError(field, message) {
+            document.getElementById(`${field}-error`).textContent = message;
+        }
+        
+        // Reset all values
+        function resetAllValues() {
+            inputFields.forEach(field => {
+                document.getElementById(field).value = '';
+                document.getElementById(`${field}-error`).textContent = '';
+            });
+            
+            resultsTable.style.display = 'none';
+            interpretationBox.style.display = 'none';
+            loadingDiv.style.display = 'none';
+            
+            // Scroll to top
+            document.body.scrollIntoView({ behavior: 'smooth' });
+        }
+          // Load sample data for testing
+        function loadSampleData() {
+            const sampleData = {
+                hemoglobin: 11.5,
+                wbc: 8.5,
+                neutrophils: 65,
+                lymphocytes: 25,
+                monocytes: 6,
+                eosinophils: 3,
+                basophils: 1,
+                platelets: 180,
+                rbc: 4.2,
+                hct: 38,
+                mcv: 78,
+                mch: 25,
+                mchc: 31,
+                rdw: 15.5
+            };
+            
+            // Populate fields with sample data
+            Object.keys(sampleData).forEach(key => {
+                if (document.getElementById(key)) {
+                    document.getElementById(key).value = sampleData[key];
+                }
+            });
+        }
+    </script>
+</body>
+</html>
